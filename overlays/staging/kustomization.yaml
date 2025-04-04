@@ -14,7 +14,7 @@ patches:
 
 helmCharts:
   - name: jupyterhub
-    repo: https://jupyterhub.github.io/helm-chart/
+    repo: https://hub.jupyter.org/helm-chart/
     version: 4.1.0
     releaseName: jupyterhub
     namespace: jupyterhub-staging
