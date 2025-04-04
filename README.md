@@ -62,41 +62,6 @@ This will create Applications for each defined cluster (dev, staging, and produc
 
 In the ArgoCD UI, you'll see applications for each environment across all clusters.
 
-## Deployment (Single Cluster)
-
-### Option 1: Using kubectl
-
-1. Apply the ArgoCD Application resources:
-
-```bash
-kubectl apply -f argocd/applications/
-```
-
-### Option 2: Using ArgoCD UI
-
-1. Access the ArgoCD UI as described in the Setup section
-
-2. Click on "+ NEW APP" to create a new application.
-
-3. For the dev environment, fill in the form as follows:
-   - Application Name: `jupyterhub-dev`
-   - Project: `default`
-   - Sync Policy: Choose `Automatic` with "Prune Resources" and "Self Heal" enabled
-   - Repository URL: `https://github.com/vvcb/argocd-jupyterhub`
-   - Revision: `HEAD`
-   - Path: `overlays/dev`
-   - Destination: `https://kubernetes.default.svc`
-   - Namespace: `jupyterhub-dev`
-   - Check "Directory Recurse" if needed
-   - Click "CREATE" to create the application
-
-4. Similarly create applications for staging and production environments:
-   - Use the same repository but different paths (`overlays/staging` and `overlays/prod`)
-   - Use different namespaces (`jupyterhub-staging` and `jupyterhub-prod`)
-   - For production, you might want to set Sync Policy to "Manual" for more control
-
-5. After creating the applications, you can view them in the ArgoCD dashboard and trigger a sync if not set to automatic.
-
 ## Accessing Applications
 
 ### JupyterHub
@@ -105,10 +70,30 @@ kubectl apply -f argocd/applications/
 kubectl port-forward -n jupyterhub-dev svc/dev-proxy-public 8000:80
 ```
 
+For staging:
+```bash
+kubectl port-forward -n jupyterhub-staging svc/stg-proxy-public 8000:80
+```
+
+For production:
+```bash
+kubectl port-forward -n jupyterhub-prod svc/prd-proxy-public 8000:80
+```
+
 ### Example App
 
 ```bash
 kubectl port-forward -n example-app-dev svc/dev-example-app 8080:80
+```
+
+For staging:
+```bash
+kubectl port-forward -n example-app-staging svc/stg-example-app 8080:80
+```
+
+For production:
+```bash
+kubectl port-forward -n example-app-prod svc/prd-example-app 8080:80
 ```
 
 ## Directory Structure
@@ -137,14 +122,19 @@ kubectl port-forward -n example-app-dev svc/dev-example-app 8080:80
 │       │   ├── deployment.yaml
 │       │   └── service.yaml
 │       └── overlays/
-│           └── dev/
+│           ├── dev/
+│           │   ├── kustomization.yaml
+│           │   ├── namespace.yaml
+│           │   └── deployment-patch.yaml
+│           ├── staging/
+│           │   ├── kustomization.yaml
+│           │   ├── namespace.yaml
+│           │   └── deployment-patch.yaml
+│           └── prod/
 │               ├── kustomization.yaml
 │               ├── namespace.yaml
 │               └── deployment-patch.yaml
 ├── argocd/
-│   ├── applications/
-│   │   ├── jupyterhub-dev.yaml
-│   │   └── example-app-dev.yaml
 │   ├── applicationsets/
 │   │   ├── jupyterhub-appset.yaml
 │   │   └── example-app-appset.yaml
