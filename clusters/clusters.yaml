@@ -1,0 +1,23 @@
+# This file contains configuration for all clusters
+# Sensitive information should be stored in sealed secrets or external secret management
+clusters:
+- name: dev
+  environment: dev
+  url: https://kubernetes.default.svc
+  labels:
+    environment: development
+    purpose: testing
+  
+- name: stg
+  environment: staging
+  url: https://stg-cluster-url.example.com  # Replace with actual staging cluster URL
+  labels:
+    environment: staging
+    purpose: pre-production
+
+- name: prd
+  environment: prod
+  url: https://prd-cluster-url.example.com  # Replace with actual production cluster URL
+  labels:
+    environment: production
+    purpose: production
