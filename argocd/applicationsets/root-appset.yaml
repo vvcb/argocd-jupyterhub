@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: root-appset
+  namespace: argocd
+spec:
+  generators:
+  - git:
+      repoURL: https://github.com/vvcb/argocd-jupyterhub.git
+      revision: HEAD
+      files:
+      - path: clusters/clusters.yaml
+  template:
+    metadata:
+      name: "root-{{name}}"
+      labels:
+        environment: "{{environment}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/vvcb/argocd-jupyterhub.git
+        targetRevision: HEAD
+        path: argocd/applicationsets
+        directory:
+          exclude: root-appset.yaml
+      destination:
+        server: "{{url}}"
+        namespace: argocd
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true

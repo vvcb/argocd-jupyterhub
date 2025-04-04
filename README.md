@@ -36,31 +36,58 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
-## Multi-Cluster Deployment with ApplicationSet
+## Multi-Cluster Deployment with App of Apps Pattern
+
+This repository uses the ArgoCD "App of Apps" pattern, where a root application manages all other applications.
 
 ### Step 1: Register Clusters
 
 Register all target clusters with ArgoCD:
 
 ```bash
-./scripts/register-clusters.bash
+# Register all clusters from the configuration file
+./scripts/register-clusters.bash --from-config clusters/clusters.yaml
 ```
 
-Make sure to edit the script first to include your actual cluster details.
+Make sure to edit the secrets after creation to include your actual cluster authentication details.
 
-### Step 2: Deploy ApplicationSets
+### Step 2: Configure Cluster Information
 
-Apply the ApplicationSet resources to deploy applications across all clusters:
+Update the `clusters/clusters.yaml` file with information about your clusters:
 
 ```bash
-kubectl apply -f argocd/applicationsets/
+# Add a new cluster
+./scripts/update-cluster-config.bash --add my-new-cluster https://my-cluster-url.example.com staging
+
+# List configured clusters
+./scripts/update-cluster-config.bash --list
+
+# Remove a cluster
+./scripts/update-cluster-config.bash --remove my-new-cluster
 ```
 
-This will create Applications for each defined cluster (dev, staging, and production).
+For sensitive information like tokens, consider using one of these approaches:
+- Sealed Secrets
+- External Secrets
+- Azure Key Vault
+- HashiCorp Vault
+- AWS Secrets Manager
 
-### Step 3: View Applications
+### Step 3: Deploy the Root Application
 
-In the ArgoCD UI, you'll see applications for each environment across all clusters.
+This will set up the App of Apps pattern:
+
+```bash
+./scripts/deploy-root-app.bash
+```
+
+The root application will automatically create and manage all child applications based on your cluster configuration.
+
+### Step 4: View Applications
+
+In the ArgoCD UI, you'll see:
+- The root application (`root-appset`)
+- Child applications for each environment across all clusters
 
 ## Accessing Applications
 
@@ -137,7 +164,8 @@ kubectl port-forward -n example-app-prod svc/prd-example-app 8080:80
 ├── argocd/
 │   ├── applicationsets/
 │   │   ├── jupyterhub-appset.yaml
-│   │   └── example-app-appset.yaml
+│   │   ├── example-app-appset.yaml
+│   │   └── root-appset.yaml
 │   └── argocd-cm.yaml
 ├── chart-values/
 │   ├── jupyterhub/
@@ -146,9 +174,13 @@ kubectl port-forward -n example-app-prod svc/prd-example-app 8080:80
 │   │       └── dev-values.yaml
 │   ├── staging-values.yaml
 │   └── prod-values.yaml
+├── clusters/
+│   └── clusters.yaml
 ├── scripts/
 │   ├── get-argocd-admin-secret.bash
-│   └── register-clusters.bash
+│   ├── register-clusters.bash
+│   ├── update-cluster-config.bash
+│   └── deploy-root-app.bash
 └── README.md
 ```
 
@@ -159,6 +191,24 @@ To add a new application:
 1. Create a directory structure in `apps/your-app-name/` with both `base/` and `overlays/` subdirectories
 2. Create an ArgoCD ApplicationSet in `argocd/applicationsets/your-app-name-appset.yaml`
 3. If using Helm charts, add appropriate values files in `chart-values/your-app-name/`
+4. The root application will automatically detect and deploy the new application
+
+## Managing Secrets
+
+For sensitive information like cluster credentials, consider these approaches:
+
+1. **Sealed Secrets**: Use Bitnami Sealed Secrets to encrypt sensitive data and store it in Git
+   ```bash
+   kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.18.1/controller.yaml
+   ```
+
+2. **External Secrets**: Use the External Secrets Operator to fetch secrets from external providers
+   ```bash
+   helm repo add external-secrets https://charts.external-secrets.io
+   helm install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace
+   ```
+
+3. **ArgoCD Plugin**: Use an ArgoCD plugin like SOPS to decrypt secrets during the sync process
 
 ## Troubleshooting
 

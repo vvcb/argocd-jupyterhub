@@ -8,16 +8,16 @@ clusters:
     environment: development
     purpose: testing
   
-- name: stg
-  environment: staging
-  url: https://stg-cluster-url.example.com  # Replace with actual staging cluster URL
-  labels:
-    environment: staging
-    purpose: pre-production
+# - name: stg
+#   environment: staging
+#   url: https://stg-cluster-url.example.com  # Replace with actual staging cluster URL
+#   labels:
+#     environment: staging
+#     purpose: pre-production
 
-- name: prd
-  environment: prod
-  url: https://prd-cluster-url.example.com  # Replace with actual production cluster URL
-  labels:
-    environment: production
-    purpose: production
+# - name: prd
+#   environment: prod
+#   url: https://prd-cluster-url.example.com  # Replace with actual production cluster URL
+#   labels:
+#     environment: production
+#     purpose: production
