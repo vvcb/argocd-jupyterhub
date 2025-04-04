@@ -6,8 +6,8 @@ function switch_cluster() {
   kubectl config use-context $cluster
 }
 
-# Default to kind01 cluster if no argument is provided
-CLUSTER=${1:-kind01}
+# Default to microk8s cluster if no argument is provided
+CLUSTER=${1:-microk8s}
 switch_cluster $CLUSTER
 
 # Get the ArgoCD admin password
