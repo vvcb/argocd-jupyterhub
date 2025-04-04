@@ -88,30 +88,38 @@ kubectl port-forward -n example-app-dev svc/dev-example-app 8080:80
 ## Directory Structure
 
 ```
-├── apps/                       # All applications
-│   ├── jupyterhub/             # JupyterHub specific configurations
-│   │   ├── base/               # Base Kustomize configuration
-│   │   └── overlays/           # Environment-specific configurations
-│   │       ├── dev/
-│   │       ├── staging/
-│   │       └── prod/
-│   └── example-app/            # Example application
+/
+├── apps/
+│   ├── jupyterhub/
+│   │   ├── base/
+│   │   │   ├── kustomization.yaml
+│   │   │   └── jupyterhub-ns.yaml
+│   │   └── overlays/
+│   │       └── dev/
+│   │           ├── kustomization.yaml
+│   │           └── namespace.yaml
+│   └── example-app/
 │       ├── base/
+│       │   ├── kustomization.yaml
+│       │   ├── namespace.yaml
+│       │   ├── deployment.yaml
+│       │   └── service.yaml
 │       └── overlays/
-│           ├── dev/
-│           ├── staging/
-│           └── prod/
-├── argocd/                     # ArgoCD specific configurations
-│   ├── applications/           # Application definitions
-│   └── argocd-cm.yaml          # ArgoCD ConfigMap for Kustomize
-└── chart-values/               # Values for Helm charts
-    ├── jupyterhub/             # JupyterHub values
-    │   ├── values.yaml         # Default values
-    │   └── environments/       # Environment-specific values
-    │       ├── dev-values.yaml
-    │       ├── staging-values.yaml
-    │       └── prod-values.yaml
-    └── other-apps/             # Values for other applications
+│           └── dev/
+│               ├── kustomization.yaml
+│               ├── namespace.yaml
+│               └── deployment-patch.yaml
+├── argocd/
+│   ├── applications/
+│   │   ├── jupyterhub-dev.yaml
+│   │   └── example-app-dev.yaml
+│   └── argocd-cm.yaml
+├── chart-values/
+│   └── jupyterhub/
+│       ├── values.yaml
+│       └── environments/
+│           └── dev-values.yaml
+└── README.md
 ```
 
 ## Adding a New Application
