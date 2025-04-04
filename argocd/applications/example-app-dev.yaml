@@ -1,27 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: jupyterhub-dev
+  name: example-app-dev
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/vvcb/argocd-jupyterhub
     targetRevision: HEAD
-    path: apps/jupyterhub/overlays/dev
+    path: apps/example-app/overlays/dev
   destination:
     server: https://kubernetes.default.svc
-    namespace: jupyterhub-dev
+    namespace: example-app-dev
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-  ignoreDifferences:
-  - group: "*"
-    kind: "Secret"
-    jsonPointers:
-    - /data/proxy_token
-    - /data/secret_token
-

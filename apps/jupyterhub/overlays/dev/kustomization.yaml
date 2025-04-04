@@ -14,4 +14,4 @@ helmCharts:
   version: 4.1.0
   releaseName: jupyterhub
   namespace: jupyterhub-dev
-  valuesFile: ../../chart-values/dev-values.yaml
+  valuesFile: ../../../../chart-values/jupyterhub/environments/dev-values.yaml

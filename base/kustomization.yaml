@@ -7,7 +7,7 @@ resources:
 helmCharts:
 - name: jupyterhub
   repo: https://hub.jupyter.org/helm-chart/
-  version: 3.0.0  # Update to your desired version
+  version: 4.1.0  # Update to your desired version
   releaseName: jupyterhub
   namespace: jupyterhub
   valuesFile: ../chart-values/values.yaml

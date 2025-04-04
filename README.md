@@ -1,6 +1,6 @@
-# JupyterHub on Kubernetes with ArgoCD
+# Multi-Application Deployment on Kubernetes with ArgoCD
 
-This repository contains configuration to deploy JupyterHub on Kubernetes using ArgoCD.
+This repository contains configuration to deploy multiple applications (including JupyterHub) on Kubernetes using ArgoCD.
 
 ## Prerequisites
 
@@ -18,13 +18,19 @@ kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-2. Access the ArgoCD UI:
+2. Apply the ArgoCD ConfigMap to enable Helm support in Kustomize:
+
+```bash
+kubectl apply -f argocd/argocd-cm.yaml
+```
+
+3. Access the ArgoCD UI:
 
 ```bash
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
-3. Login using the default credentials (username: `admin`, password can be retrieved with):
+4. Login using the default credentials (username: `admin`, password can be retrieved with):
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
@@ -65,30 +71,60 @@ kubectl apply -f argocd/applications/
 
 5. After creating the applications, you can view them in the ArgoCD dashboard and trigger a sync if not set to automatic.
 
-## Accessing JupyterHub
+## Accessing Applications
 
-Once deployed, access JupyterHub:
+### JupyterHub
 
 ```bash
-kubectl port-forward -n jupyterhub svc/proxy-public 8000:80
+kubectl port-forward -n jupyterhub-dev svc/dev-proxy-public 8000:80
 ```
 
-For the dev/staging/prod environments, use the appropriate namespace.
+### Example App
+
+```bash
+kubectl port-forward -n example-app-dev svc/dev-example-app 8080:80
+```
 
 ## Directory Structure
 
-- `base/`: Base Kustomize configuration for JupyterHub
-- `overlays/`: Environment-specific Kustomize configurations
-  - `dev/`
-  - `staging/`
-  - `prod/`
-- `argocd/`: ArgoCD specific configurations
-  - `applications/`: ArgoCD Application resources
-- `chart-values/`: Helm chart values for different environments
+```
+├── apps/                       # All applications
+│   ├── jupyterhub/             # JupyterHub specific configurations
+│   │   ├── base/               # Base Kustomize configuration
+│   │   └── overlays/           # Environment-specific configurations
+│   │       ├── dev/
+│   │       ├── staging/
+│   │       └── prod/
+│   └── example-app/            # Example application
+│       ├── base/
+│       └── overlays/
+│           ├── dev/
+│           ├── staging/
+│           └── prod/
+├── argocd/                     # ArgoCD specific configurations
+│   ├── applications/           # Application definitions
+│   └── argocd-cm.yaml          # ArgoCD ConfigMap for Kustomize
+└── chart-values/               # Values for Helm charts
+    ├── jupyterhub/             # JupyterHub values
+    │   ├── values.yaml         # Default values
+    │   └── environments/       # Environment-specific values
+    │       ├── dev-values.yaml
+    │       ├── staging-values.yaml
+    │       └── prod-values.yaml
+    └── other-apps/             # Values for other applications
+```
+
+## Adding a New Application
+
+To add a new application:
+
+1. Create a directory structure in `apps/your-app-name/` with both `base/` and `overlays/` subdirectories
+2. Create an ArgoCD Application in `argocd/applications/your-app-name.yaml`
+3. If using Helm charts, add appropriate values files in `chart-values/your-app-name/`
 
 ## Customization
 
-Edit the files in the environment-specific overlays to customize JupyterHub for your needs.
+Edit the files in the environment-specific overlays to customize applications for your needs.
 
 ## Troubleshooting
 
@@ -105,23 +141,22 @@ If you encounter synchronization issues in ArgoCD:
 
 This error occurs when using Kustomize with Helm charts but the Helm chart integration isn't properly configured. To fix this:
 
-1. Make sure you have the proper `kustomization.yaml` structure in your base directory:
-
+1. Make sure you have applied the ArgoCD ConfigMap that enables Helm support:
 ```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - jupyterhub-ns.yaml
-helmCharts:
-- name: jupyterhub
-  repo: https://hub.jupyter.org/helm-chart/
-  version: 3.0.0  # Specify your desired version
-  releaseName: jupyterhub
-  namespace: jupyterhub
-  valuesFile: values.yaml  # Reference to your values file
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+data:
+  kustomize.buildOptions: "--enable-helm"
 ```
 
 2. Ensure you're using a version of Kustomize that supports Helm charts (v4.1.0+)
-3. Make sure ArgoCD is configured to use the appropriate version of Kustomize
+3. Verify your kustomization.yaml follows the correct structure with helmCharts section
+4. Restart ArgoCD after applying the ConfigMap changes:
+```bash
+kubectl rollout restart deployment argocd-repo-server -n argocd
+```
 
 For more details on using Helm charts with Kustomize, refer to the [Kustomize documentation](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/helmcharts/).
