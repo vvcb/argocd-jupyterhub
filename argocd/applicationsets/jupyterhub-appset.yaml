@@ -6,7 +6,7 @@ metadata:
 spec:
   generators:
   - git:
-      repoURL: https://github.com/vvcb/argocd-jupyterhub.git
+      repoURL: https://github.com/vvcb/argocd-tre.git
       revision: HEAD
       files:
       - path: "clusters/clusters.yaml"
@@ -20,7 +20,7 @@ spec:
           - matrix:
               generators:
               - git:
-                  repoURL: https://github.com/vvcb/argocd-jupyterhub.git
+                  repoURL: https://github.com/vvcb/argocd-tre.git
                   revision: HEAD
                   files:
                   - path: clusters/clusters.yaml
@@ -35,7 +35,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/vvcb/argocd-jupyterhub.git
+        repoURL: https://github.com/vvcb/argocd-tre.git
         targetRevision: HEAD
         path: apps/jupyterhub/overlays/{{environment}}
       destination:
