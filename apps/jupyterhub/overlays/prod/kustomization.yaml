@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: jupyterhub-prod
+namePrefix: prd-
+
+resources:
+  - ../../base
+  - namespace.yaml
+
+helmCharts:
+- name: jupyterhub
+  repo: https://hub.jupyter.org/helm-chart/
+  version: 4.1.0
+  releaseName: jupyterhub
+  namespace: jupyterhub-prod
+  valuesFile: ../../../../chart-values/prod-values.yaml

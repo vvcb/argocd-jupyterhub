@@ -36,7 +36,33 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
-## Deployment
+## Multi-Cluster Deployment with ApplicationSet
+
+### Step 1: Register Clusters
+
+Register all target clusters with ArgoCD:
+
+```bash
+./scripts/register-clusters.bash
+```
+
+Make sure to edit the script first to include your actual cluster details.
+
+### Step 2: Deploy ApplicationSets
+
+Apply the ApplicationSet resources to deploy applications across all clusters:
+
+```bash
+kubectl apply -f argocd/applicationsets/
+```
+
+This will create Applications for each defined cluster (dev, staging, and production).
+
+### Step 3: View Applications
+
+In the ArgoCD UI, you'll see applications for each environment across all clusters.
+
+## Deployment (Single Cluster)
 
 ### Option 1: Using kubectl
 
@@ -95,7 +121,13 @@ kubectl port-forward -n example-app-dev svc/dev-example-app 8080:80
 │   │   │   ├── kustomization.yaml
 │   │   │   └── jupyterhub-ns.yaml
 │   │   └── overlays/
-│   │       └── dev/
+│   │       ├── dev/
+│   │       │   ├── kustomization.yaml
+│   │       │   └── namespace.yaml
+│   │       ├── staging/
+│   │       │   ├── kustomization.yaml
+│   │       │   └── namespace.yaml
+│   │       └── prod/
 │   │           ├── kustomization.yaml
 │   │           └── namespace.yaml
 │   └── example-app/
@@ -113,12 +145,20 @@ kubectl port-forward -n example-app-dev svc/dev-example-app 8080:80
 │   ├── applications/
 │   │   ├── jupyterhub-dev.yaml
 │   │   └── example-app-dev.yaml
+│   ├── applicationsets/
+│   │   ├── jupyterhub-appset.yaml
+│   │   └── example-app-appset.yaml
 │   └── argocd-cm.yaml
 ├── chart-values/
-│   └── jupyterhub/
-│       ├── values.yaml
-│       └── environments/
-│           └── dev-values.yaml
+│   ├── jupyterhub/
+│   │   ├── values.yaml
+│   │   └── environments/
+│   │       └── dev-values.yaml
+│   ├── staging-values.yaml
+│   └── prod-values.yaml
+├── scripts/
+│   ├── get-argocd-admin-secret.bash
+│   └── register-clusters.bash
 └── README.md
 ```
 
@@ -127,12 +167,8 @@ kubectl port-forward -n example-app-dev svc/dev-example-app 8080:80
 To add a new application:
 
 1. Create a directory structure in `apps/your-app-name/` with both `base/` and `overlays/` subdirectories
-2. Create an ArgoCD Application in `argocd/applications/your-app-name.yaml`
+2. Create an ArgoCD ApplicationSet in `argocd/applicationsets/your-app-name-appset.yaml`
 3. If using Helm charts, add appropriate values files in `chart-values/your-app-name/`
-
-## Customization
-
-Edit the files in the environment-specific overlays to customize applications for your needs.
 
 ## Troubleshooting
 
